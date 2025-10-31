@@ -3,6 +3,7 @@ package com.rq.rubyyaicode.model.vo.UserVO;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 @Data
 public class UserVO implements Serializable {
