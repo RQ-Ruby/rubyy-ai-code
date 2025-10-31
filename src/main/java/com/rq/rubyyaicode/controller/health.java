@@ -1,4 +1,4 @@
-package com.rq.rubyyaicode.controll;
+package com.rq.rubyyaicode.controller;
 
 import com.rq.rubyyaicode.common.BaseResponse;
 import com.rq.rubyyaicode.common.ResultUtils;
