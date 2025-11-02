@@ -1,5 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
+import UserLoginView from '@/views/user/UserLoginView.vue'
+import UserRegisterView from '@/views/user/UserRegisterView.vue'
+import UserManageView from '@/views/admin/UserManageView.vue'
+import AboutView from '@/views/AboutView.vue'
+import ContactView from '@/views/ContactView.vue'
+
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -12,10 +18,7 @@ const router = createRouter({
     {
       path: '/about',
       name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import('../views/AboutView.vue'),
+      component: AboutView
     },
     {
       path: '/projects',
@@ -25,8 +28,24 @@ const router = createRouter({
     {
       path: '/contact',
       name: 'contact',
-      component: () => import('../views/ContactView.vue'),
+      component: ContactView
     },
+    {
+      path: '/user/login',
+      name: 'userLogin',
+      component: () => import('../views/user/UserLoginView.vue'),
+    },
+    {
+      path: '/user/register',
+      name: 'userRegister',
+      component: () => import('../views/user/UserRegisterView.vue'),
+    },
+    {
+      path: '/admin/UserManage',
+      name: 'userManage',
+      component: UserManageView,
+    },
+
   ],
 })
 
