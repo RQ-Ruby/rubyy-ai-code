@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
  * @author RQ
  * @date 2025/11/9 下午2:33
  */
+@Deprecated
 public class CodeFileSaver {
 
     // 文件保存根目录
