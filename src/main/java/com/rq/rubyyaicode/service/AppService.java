@@ -4,7 +4,9 @@ import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.service.IService;
 import com.rq.rubyyaicode.model.entity.App;
 import com.rq.rubyyaicode.model.dto.app.AppQueryRequest;
+import com.rq.rubyyaicode.model.entity.User;
 import com.rq.rubyyaicode.model.vo.AppVO.AppVO;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 
@@ -14,6 +16,8 @@ import java.util.List;
  * @author <a href="https://github.com/liyupi">程序员鱼皮</a>
  */
 public interface AppService extends IService<App> {
+
+    Flux<String> chatToGenCode(Long appId, String message, User loginUser);
 
     /**
      * 获取应用封装类
