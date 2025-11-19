@@ -2,9 +2,12 @@ package com.rq.rubyyaicode.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
+import com.rq.rubyyaicode.constant.AppConstant;
 import com.rq.rubyyaicode.core.AiCodeGeneratorFacade;
 import com.rq.rubyyaicode.exception.BusinessException;
 import com.rq.rubyyaicode.exception.ErrorCode;
@@ -22,6 +25,8 @@ import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
+import java.io.File;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -65,8 +70,60 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         // 5. 调用 AI 生成代码
         return aiCodeGeneratorFacade.generateAndSaveCodeStream(message, codeGenTypeEnum, appId);
     }
+    /**
+     * @description 部署应用
+     * @author RQ
+     * @date 2025/11/16 下午4:51
+     */
+    @Override
+    public String deployApp(Long appId, User loginUser) {
+        // 1. 参数校验
+        ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR, "应用 ID 不能为空");
+        ThrowUtils.throwIf(loginUser == null, ErrorCode.NOT_LOGIN_ERROR, "用户未登录");
+        // 2. 查询应用信息
+        App app = this.getById(appId);
+        ThrowUtils.throwIf(app == null, ErrorCode.NOT_FOUND_ERROR, "应用不存在");
+        // 3. 验证用户是否有权限部署该应用，仅本人可以部署
+        if (!app.getUserId().equals(loginUser.getId())) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限部署该应用");
+        }
+        //4.查看deployKey是否存在，不存在就重新生成六位字符串
+        String deployKey = app.getDeployKey();
+        if (StrUtil.isBlank(deployKey)) {
+           deployKey= RandomUtil.randomString(6);
+        }
+        //5.获得生成的类型，得到源路径
+        String codeGenTypeStr = app.getCodeGenType();
+        String sName = codeGenTypeStr + "_" + appId;
+        String sourcePath = AppConstant.CODE_OUTPUT_ROOT_DIR + File.separator+sName;
+        File sourceDir = new File(sourcePath);
+        if(!sourceDir.exists()||!sourceDir.isDirectory()){
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "代码生成目录不存在");
+        }
+        // 6. 部署应用，将代码复制到部署目录
+        String deployPath = AppConstant.CODE_DEPLOY_ROOT_DIR + File.separator+deployKey;
+        File deployDir = new File(deployPath);
+        try {
+            FileUtil.copyContent(sourceDir, deployDir, true);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "部署应用失败");
+        }
+        //7.更新数据库
+        App updateApp = new App();
+        updateApp.setId(appId);
+        updateApp.setDeployKey(deployKey);
+        //更新部署时间
+        updateApp.setDeployedTime(LocalDateTime.now());
+        boolean updateResult = this.updateById(updateApp);
+        ThrowUtils.throwIf(!updateResult, ErrorCode.SYSTEM_ERROR, "更新应用部署信息失败");
+        return String.format("%s/%s/", AppConstant.CODE_DEPLOY_HOST, deployKey);
+    }
 
-
+    /**
+     * @description 获取应用封装类
+     * @author RQ
+     * @date 2025/11/16 下午4:51
+     */
     @Override
     public AppVO getAppVO(App app) {
         if (app == null) {
@@ -83,7 +140,11 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         }
         return appVO;
     }
-
+    /**
+     * @description 获取应用封装类列表
+     * @author RQ
+     * @date 2025/11/16 下午4:51
+     */
     @Override
     public List<AppVO> getAppVOList(List<App> appList) {
         if (CollUtil.isEmpty(appList)) {
@@ -102,7 +163,11 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
             return appVO;
         }).collect(Collectors.toList());
     }
-
+    /**
+     * @description 构造应用查询条件
+     * @author RQ
+     * @date 2025/11/16 下午4:51
+     */
     @Override
     public QueryWrapper getQueryWrapper(AppQueryRequest appQueryRequest) {
         if (appQueryRequest == null) {

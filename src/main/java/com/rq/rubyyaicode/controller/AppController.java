@@ -15,10 +15,7 @@ import com.rq.rubyyaicode.constant.UserConstant;
 import com.rq.rubyyaicode.exception.BusinessException;
 import com.rq.rubyyaicode.exception.ErrorCode;
 import com.rq.rubyyaicode.exception.ThrowUtils;
-import com.rq.rubyyaicode.model.dto.app.AppAddRequest;
-import com.rq.rubyyaicode.model.dto.app.AppAdminUpdateRequest;
-import com.rq.rubyyaicode.model.dto.app.AppQueryRequest;
-import com.rq.rubyyaicode.model.dto.app.AppUpdateRequest;
+import com.rq.rubyyaicode.model.dto.app.*;
 import com.rq.rubyyaicode.model.entity.App;
 import com.rq.rubyyaicode.model.entity.User;
 import com.rq.rubyyaicode.model.enums.CodeGenTypeEnum;
@@ -51,7 +48,28 @@ public class AppController {
 
     @Resource
     private UserService userService;
-  /**
+
+    /**
+     * 应用部署
+     *
+     * @param appDeployRequest 部署请求
+     * @param request          请求
+     * @return 部署 URL
+     */
+    @PostMapping("/deploy")
+    public BaseResponse<String> deployApp(@RequestBody AppDeployRequest appDeployRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(appDeployRequest == null, ErrorCode.PARAMS_ERROR);
+        Long appId = appDeployRequest.getAppId();
+        ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR, "应用 ID 不能为空");
+        // 获取当前登录用户
+        User loginUser = userService.isLogin(request);
+        // 调用服务部署应用
+        String deployUrl = appService.deployApp(appId, loginUser);
+        return ResultUtils.success(deployUrl);
+    }
+
+
+    /**
    * @description 应用聊天生成代码（流式 SSE）
    * @author RQ
    * @date 2025/11/16 下午4:57
