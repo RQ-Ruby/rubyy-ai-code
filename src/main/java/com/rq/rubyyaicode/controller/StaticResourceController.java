@@ -1,9 +1,9 @@
 package com.rq.rubyyaicode.controller;
 
 import com.rq.rubyyaicode.constant.AppConstant;
-import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -52,7 +52,7 @@ public class StaticResourceController {
                 return ResponseEntity.notFound().build();
             }
             // 返回文件资源
-            Resource resource = (Resource) new FileSystemResource(file);
+            Resource resource = new FileSystemResource(file);
             return ResponseEntity.ok()
                     .header("Content-Type", getContentTypeWithCharset(filePath))
                     .body(resource);

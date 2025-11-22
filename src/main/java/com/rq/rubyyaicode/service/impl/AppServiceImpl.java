@@ -87,37 +87,39 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         if (!app.getUserId().equals(loginUser.getId())) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限部署该应用");
         }
-        //4.查看deployKey是否存在，不存在就重新生成六位字符串
+        // 4. 检查是否已有 deployKey
         String deployKey = app.getDeployKey();
+        // 没有则生成 6 位 deployKey（大小写字母 + 数字）
         if (StrUtil.isBlank(deployKey)) {
-           deployKey= RandomUtil.randomString(6);
+            deployKey = RandomUtil.randomString(6);
         }
-        //5.获得生成的类型，得到源路径
-        String codeGenTypeStr = app.getCodeGenType();
-        String sName = codeGenTypeStr + "_" + appId;
-        String sourcePath = AppConstant.CODE_OUTPUT_ROOT_DIR + File.separator+sName;
-        File sourceDir = new File(sourcePath);
-        if(!sourceDir.exists()||!sourceDir.isDirectory()){
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "代码生成目录不存在");
+        // 5. 获取代码生成类型，构建源目录路径
+        String codeGenType = app.getCodeGenType();
+        String sourceDirName = codeGenType + "_" + appId;
+        String sourceDirPath = AppConstant.CODE_OUTPUT_ROOT_DIR + File.separator + sourceDirName;
+        // 6. 检查源目录是否存在
+        File sourceDir = new File(sourceDirPath);
+        if (!sourceDir.exists() || !sourceDir.isDirectory()) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "应用代码不存在，请先生成代码");
         }
-        // 6. 部署应用，将代码复制到部署目录
-        String deployPath = AppConstant.CODE_DEPLOY_ROOT_DIR + File.separator+deployKey;
-        File deployDir = new File(deployPath);
+        // 7. 复制文件到部署目录
+        String deployDirPath = AppConstant.CODE_DEPLOY_ROOT_DIR + File.separator + deployKey;
         try {
-            FileUtil.copyContent(sourceDir, deployDir, true);
+            FileUtil.copyContent(sourceDir, new File(deployDirPath), true);
         } catch (Exception e) {
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "部署应用失败");
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "部署失败：" + e.getMessage());
         }
-        //7.更新数据库
+        // 8. 更新应用的 deployKey 和部署时间
         App updateApp = new App();
         updateApp.setId(appId);
         updateApp.setDeployKey(deployKey);
-        //更新部署时间
         updateApp.setDeployedTime(LocalDateTime.now());
         boolean updateResult = this.updateById(updateApp);
-        ThrowUtils.throwIf(!updateResult, ErrorCode.SYSTEM_ERROR, "更新应用部署信息失败");
+        ThrowUtils.throwIf(!updateResult, ErrorCode.OPERATION_ERROR, "更新应用部署信息失败");
+        // 9. 返回可访问的 URL
         return String.format("%s/%s/", AppConstant.CODE_DEPLOY_HOST, deployKey);
     }
+
 
     /**
      * @description 获取应用封装类

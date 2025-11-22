@@ -1,0 +1,2 @@
+// 在文件顶部的import部分添加
+import org.springframework.core.io.Resource;
