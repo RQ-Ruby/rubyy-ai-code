@@ -9,7 +9,7 @@ export async function serveStaticResource(
   options?: { [key: string]: any }
 ) {
   const { deployKey: param0, ...queryParams } = params
-  return request<API.Resource>(`/static/${param0}/**`, {
+  return request<string>(`/static/${param0}/**`, {
     method: 'GET',
     params: { ...queryParams },
     ...(options || {}),
