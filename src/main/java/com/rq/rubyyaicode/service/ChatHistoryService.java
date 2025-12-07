@@ -7,6 +7,7 @@ import com.mybatisflex.core.service.IService;
 import com.rq.rubyyaicode.model.dto.chathistory.ChatHistoryQueryRequest;
 import com.rq.rubyyaicode.model.entity.ChatHistory;
 import com.rq.rubyyaicode.model.entity.User;
+import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 
 import java.time.LocalDateTime;
 
@@ -15,6 +16,9 @@ import java.time.LocalDateTime;
  *
  */
 public interface ChatHistoryService extends IService<ChatHistory> {
+
+    int loadChatHistoryToMemory(Long appId, MessageWindowChatMemory chatMemory, int maxCount);
+
     QueryWrapper getQueryWrapper(ChatHistoryQueryRequest chatHistoryQueryRequest);
 
 

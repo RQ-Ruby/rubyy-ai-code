@@ -3,6 +3,19 @@ spring:
     name: rubyy-ai-code
   profiles:
     active: local
+  # redis
+  data:
+    redis:
+      host: localhost
+      port: 6379
+#      password: 12345
+      ttl: 3600
+  # session 配置
+  session:
+    store-type: redis
+    # session 30 天过期
+    timeout: 2592000
+
 
   # mysql
   datasource:
@@ -15,6 +28,12 @@ server:
   port: 8123
   servlet:
     context-path: /api
+    # cookie 30 天过期
+    session:
+      cookie:
+        max-age: 2592000
+
+
 # springdoc-openapi
 springdoc:
   group-configs:
