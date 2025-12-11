@@ -44,7 +44,7 @@ import { register } from '@/api/userController.ts'
 
 const router = useRouter()
 
-const formState = reactive<API.registerrRequest>({
+const formState = reactive<API.UserRegisterRequest>({
   userAccount: '',
   userPassword: '',
   checkPassword: '',
@@ -68,7 +68,7 @@ const validateCheckPassword = (rule: unknown, value: string, callback: (error?: 
  * 提交表单
  * @param values
  */
-const handleSubmit = async (values: API.registerrRequest) => {
+const handleSubmit = async (values: API.UserRegisterRequest) => {
   const res = await register(values)
   // 注册成功，跳转到登录页面
   if (res.data.code === 0) {
