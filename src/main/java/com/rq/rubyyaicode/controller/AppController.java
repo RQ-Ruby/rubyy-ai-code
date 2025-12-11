@@ -79,30 +79,63 @@ public class AppController {
   public Flux<ServerSentEvent<String>> chatToGenCode(@RequestParam Long appId,
                                                      @RequestParam String message,
                                                      HttpServletRequest request) {
-      // 参数校验
-      ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR, "应用ID无效");
-      ThrowUtils.throwIf(StrUtil.isBlank(message), ErrorCode.PARAMS_ERROR, "用户消息不能为空");
-      // 获取当前登录用户
-      User loginUser = userService.isLogin(request);
-      // 调用服务生成代码（流式）
-      Flux<String> contentFlux = appService.chatToGenCode(appId, message, loginUser);
-      // 转换为 ServerSentEvent 格式
-      return contentFlux
-              .map(chunk -> {
-                  // 将内容包装成JSON对象
-                  Map<String, String> wrapper = Map.of("d", chunk);
-                  String jsonData = JSONUtil.toJsonStr(wrapper);
-                  return ServerSentEvent.<String>builder()
-                          .data(jsonData)
-                          .build();
-              })
-              .concatWith(Mono.just(
-                      // 发送结束事件
-                      ServerSentEvent.<String>builder()
-                              .event("done")
-                              .data("")
-                              .build()
-              ));
+      try {
+          ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR, "应用ID无效");
+          ThrowUtils.throwIf(StrUtil.isBlank(message), ErrorCode.PARAMS_ERROR, "用户消息不能为空");
+          User loginUser = userService.isLogin(request);
+          Flux<String> contentFlux = appService.chatToGenCode(appId, message, loginUser);
+          return contentFlux
+                  .map(chunk -> {
+                      Map<String, String> wrapper = Map.of("d", chunk);
+                      String jsonData = JSONUtil.toJsonStr(wrapper);
+                      return ServerSentEvent.<String>builder()
+                              .data(jsonData)
+                              .build();
+                  })
+                  .onErrorResume(error -> {
+                      int code = (error instanceof BusinessException)
+                              ? ((BusinessException) error).getCode()
+                              : ErrorCode.SYSTEM_ERROR.getCode();
+                      String errJson = JSONUtil.toJsonStr(Map.of(
+                              "code", String.valueOf(code),
+                              "message", error.getMessage() == null ? "系统错误" : error.getMessage()
+                      ));
+                      return Flux.just(
+                              ServerSentEvent.<String>builder()
+                                      .event("error")
+                                      .data(errJson)
+                                      .build(),
+                              ServerSentEvent.<String>builder()
+                                      .event("done")
+                                      .data("")
+                                      .build()
+                      );
+                  })
+                  .concatWith(Mono.just(
+                          ServerSentEvent.<String>builder()
+                                  .event("done")
+                                  .data("")
+                                  .build()
+                  ));
+      } catch (Exception e) {
+          int code = (e instanceof BusinessException)
+                  ? ((BusinessException) e).getCode()
+                  : ErrorCode.SYSTEM_ERROR.getCode();
+          String errJson = JSONUtil.toJsonStr(Map.of(
+                  "code", String.valueOf(code),
+                  "message", e.getMessage() == null ? "系统错误" : e.getMessage()
+          ));
+          return Flux.just(
+                  ServerSentEvent.<String>builder()
+                          .event("error")
+                          .data(errJson)
+                          .build(),
+                  ServerSentEvent.<String>builder()
+                          .event("done")
+                          .data("")
+                          .build()
+          );
+      }
   }
 
     /**
