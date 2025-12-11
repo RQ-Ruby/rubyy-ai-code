@@ -144,19 +144,19 @@ public class ChatHistoryServiceImpl extends ServiceImpl<ChatHistoryMapper, ChatH
      * @date 2025/11/24 下午6:19
      */
     @Override
-    public boolean addChatMessage(Long appId, Long userId, String message, String messageType) {
+    public boolean addChatMessage(Long appId, String userId, String message, String messageType) {
         //校验参数
         ThrowUtils.throwIf(message == null || message.isEmpty(), ErrorCode.PARAMS_ERROR, "消息内容不能为空");
         ThrowUtils.throwIf(messageType == null, ErrorCode.PARAMS_ERROR, "消息类型不能为空");
         ThrowUtils.throwIf(appId == null||appId<=0, ErrorCode.PARAMS_ERROR, "应用ID不能为空");
-        ThrowUtils.throwIf(userId == null||userId<=0, ErrorCode.PARAMS_ERROR, "用户ID不能为空");
+        ThrowUtils.throwIf(userId == null, ErrorCode.PARAMS_ERROR, "用户ID不能为空");
         //验证消息是否有效
         ChatHistoryMessageTypeEnum messageTypeEnum = ChatHistoryMessageTypeEnum.getEnumByValue(messageType);
         ThrowUtils.throwIf(messageTypeEnum == null, ErrorCode.PARAMS_ERROR, "消息类型无效");
          //创建实体类
         ChatHistory chatHistory = new ChatHistory();
         chatHistory.setAppId(appId);
-        chatHistory.setUserId(userId);
+        chatHistory.setUserId(Long.valueOf(userId));
         chatHistory.setMessage(message);
         chatHistory.setMessageType(messageType);
         return this.save(chatHistory);

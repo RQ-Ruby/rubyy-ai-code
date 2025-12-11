@@ -31,7 +31,7 @@ public interface ChatHistoryService extends IService<ChatHistory> {
  * @author RQ
  * @date 2025/11/24 下午6:19
  */
-    public boolean addChatMessage(Long appId, Long userId, String message, String messageType);
+    public boolean addChatMessage(Long appId, String userId, String message, String messageType);
 /**
  * @description 根据应用ID删除所有对话历史记录
  * @author RQ
